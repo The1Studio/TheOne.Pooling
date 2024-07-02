@@ -11,7 +11,7 @@
   ],
   "versionDefines": [
     {
-      "name": "com.frostbun.unit",
+      "name": "com.frostbun.unit.di",
       "expression": "",
       "define": "UNIT_DI"
     },
