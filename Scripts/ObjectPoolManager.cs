@@ -80,7 +80,7 @@ namespace UniT.Pooling
 
         void IObjectPoolManager.Recycle(GameObject instance)
         {
-            if (!this.instanceToPool.TryRemove(instance, out var pool)) throw new InvalidOperationException($"Trying to recycle {instance.name} that is not spawned");
+            if (!this.instanceToPool.Remove(instance, out var pool)) throw new InvalidOperationException($"Trying to recycle {instance.name} that is not spawned");
             pool.Recycle(instance);
             this.logger.Debug($"Recycled {instance.name}");
         }
@@ -163,14 +163,14 @@ namespace UniT.Pooling
 
         private bool TryGetPool(GameObject prefab, [MaybeNullWhen(false)] out ObjectPool pool)
         {
-            if (this.prefabToPool.TryGet(prefab, out pool)) return true;
+            if (this.prefabToPool.TryGetValue(prefab, out pool)) return true;
             this.logger.Warning($"{prefab.name} pool not loaded");
             return false;
         }
 
         private bool TryGetPrefab(string key, [MaybeNullWhen(false)] out GameObject prefab)
         {
-            if (this.keyToPrefab.TryGet(key, out prefab)) return true;
+            if (this.keyToPrefab.TryGetValue(key, out prefab)) return true;
             this.logger.Warning($"{key} pool not loaded");
             return false;
         }
