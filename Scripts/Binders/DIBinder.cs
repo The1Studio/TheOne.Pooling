@@ -12,7 +12,7 @@ namespace UniT.Pooling
         {
             if (container.Contains<IObjectPoolManager>()) return;
             container.AddLoggerManager();
-            container.AddResourceManagers();
+            container.AddAssetsManager();
             container.AddInterfaces<ObjectPoolManager>();
         }
     }

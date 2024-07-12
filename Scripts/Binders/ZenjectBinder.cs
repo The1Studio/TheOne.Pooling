@@ -12,7 +12,7 @@ namespace UniT.Pooling
         {
             if (container.HasBinding<IObjectPoolManager>()) return;
             container.BindLoggerManager();
-            container.BindResourceManagers();
+            container.BindAssetsManager();
             container.BindInterfacesTo<ObjectPoolManager>().AsSingle();
         }
     }
