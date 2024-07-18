@@ -13,6 +13,8 @@ namespace UniT.Pooling
 
     public interface IObjectPoolManager
     {
+        public event Action<GameObject> OnInstantiate;
+
         public void Load(GameObject prefab, int count = 1);
 
         public void Load(string key, int count = 1);

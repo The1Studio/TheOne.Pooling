@@ -42,6 +42,8 @@ namespace UniT.Pooling
 
         #region Public
 
+        event Action<GameObject> IObjectPoolManager.OnInstantiate { add => this.onInstantiate += value; remove => this.onInstantiate -= value; }
+
         void IObjectPoolManager.Load(GameObject prefab, int count) => this.Load(prefab, count);
 
         void IObjectPoolManager.Load(string key, int count)
@@ -114,11 +116,14 @@ namespace UniT.Pooling
 
         #region Private
 
+        private Action<GameObject>? onInstantiate;
+
         private void Load(GameObject prefab, int count)
         {
             this.prefabToPool.GetOrAdd(prefab, () =>
             {
                 var pool = ObjectPool.Construct(prefab, this.poolsContainer);
+                pool.OnInstantiate += this.OnInstantiate;
                 this.logger.Debug($"Instantiated {pool.gameObject.name}");
                 return pool;
             }).Load(count);
@@ -157,6 +162,7 @@ namespace UniT.Pooling
         {
             if (!this.TryGetPool(prefab, out var pool)) return;
             this.RecycleAll(prefab);
+            pool.OnInstantiate -= this.OnInstantiate;
             Object.Destroy(pool.gameObject);
             this.logger.Debug($"Destroyed {pool.gameObject.name}");
         }
@@ -174,6 +180,8 @@ namespace UniT.Pooling
             this.logger.Warning($"{key} pool not loaded");
             return false;
         }
+
+        private void OnInstantiate(GameObject instance) => this.onInstantiate?.Invoke(instance);
 
         #endregion
     }
