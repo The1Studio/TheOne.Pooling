@@ -12,7 +12,6 @@ namespace UniT.Pooling
 
         [SerializeField] private GameObject prefab = null!;
 
-        private new      Transform           transform      = null!;
         private readonly Queue<GameObject>   pooledObjects  = new Queue<GameObject>();
         private readonly HashSet<GameObject> spawnedObjects = new HashSet<GameObject>();
 
@@ -26,6 +25,9 @@ namespace UniT.Pooling
             pool.prefab = prefab;
             return pool;
         }
+
+        // ReSharper disable once InconsistentNaming
+        public new Transform transform { get; private set; } = null!;
 
         private void Awake()
         {
