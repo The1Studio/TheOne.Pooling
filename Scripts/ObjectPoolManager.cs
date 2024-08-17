@@ -147,7 +147,7 @@ namespace UniT.Pooling
         {
             if (!this.TryGetPool(prefab, out var pool)) return;
             pool.RecycleAll();
-            this.instanceToPool.RemoveAll((_, otherPool) => otherPool == pool);
+            this.instanceToPool.RemoveWhere((_, otherPool) => otherPool == pool);
             this.logger.Debug($"Recycled all {prefab.name}");
         }
 
