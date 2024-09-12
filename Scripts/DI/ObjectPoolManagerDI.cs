@@ -1,12 +1,12 @@
 #if UNIT_DI
 #nullable enable
-namespace UniT.Pooling
+namespace UniT.Pooling.DI
 {
     using UniT.DI;
-    using UniT.Logging;
-    using UniT.ResourceManagement;
+    using UniT.Logging.DI;
+    using UniT.ResourceManagement.DI;
 
-    public static class DIBinder
+    public static class ObjectPoolManagerDI
     {
         public static void AddObjectPoolManager(this DependencyContainer container)
         {

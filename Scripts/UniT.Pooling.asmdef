@@ -5,21 +5,9 @@
     "UniT.Extensions",
     "UniT.Logging",
     "UniT.ResourceManagement",
-    "UniT.DI",
-    "Zenject",
     "UniTask"
   ],
   "versionDefines": [
-    {
-      "name": "com.frostbun.unit.di",
-      "expression": "",
-      "define": "UNIT_DI"
-    },
-    {
-      "name": "com.svermeulen.extenject",
-      "expression": "",
-      "define": "UNIT_ZENJECT"
-    },
     {
       "name": "com.cysharp.unitask",
       "expression": "",
