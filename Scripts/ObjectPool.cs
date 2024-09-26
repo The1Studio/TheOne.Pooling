@@ -67,7 +67,7 @@ namespace UniT.Pooling
 
         public void Recycle(GameObject instance)
         {
-            if (!this.spawnedObjects.Remove(instance)) throw new InvalidOperationException($"{instance.name} was not spawned from {this.gameObject.name}");
+            if (!this.spawnedObjects.Remove(instance)) throw new InvalidOperationException($"{instance.name} was not spawned from {this.name}");
             instance.SetActive(false);
             instance.transform.SetParent(this.transform);
             this.pooledObjects.Enqueue(instance);

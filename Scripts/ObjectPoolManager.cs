@@ -82,7 +82,7 @@ namespace UniT.Pooling
 
         void IObjectPoolManager.Recycle(GameObject instance)
         {
-            if (!this.instanceToPool.Remove(instance, out var pool)) throw new InvalidOperationException($"Trying to recycle {instance.name} that is not spawned");
+            if (!this.instanceToPool.Remove(instance, out var pool)) throw new InvalidOperationException($"{instance.name} was not spawned from {this.poolsContainer.name}");
             pool.Recycle(instance);
             this.logger.Debug($"Recycled {instance.name}");
         }
@@ -124,7 +124,7 @@ namespace UniT.Pooling
             {
                 var pool = ObjectPool.Construct(prefab, this.poolsContainer);
                 pool.OnInstantiate += this.OnInstantiate;
-                this.logger.Debug($"Instantiated {pool.gameObject.name}");
+                this.logger.Debug($"Instantiated {pool.name}");
                 return pool;
             }).Load(count);
         }
@@ -139,7 +139,7 @@ namespace UniT.Pooling
             var pool     = this.prefabToPool[prefab];
             var instance = pool.Spawn(position, rotation, parent);
             this.instanceToPool.Add(instance, pool);
-            this.logger.Debug($"Spawned {prefab.name}");
+            this.logger.Debug($"Spawned {instance.name}");
             return instance;
         }
 
@@ -148,14 +148,14 @@ namespace UniT.Pooling
             if (!this.TryGetPool(prefab, out var pool)) return;
             pool.RecycleAll();
             this.instanceToPool.RemoveWhere((_, otherPool) => otherPool == pool);
-            this.logger.Debug($"Recycled all {prefab.name}");
+            this.logger.Debug($"Recycled all {pool.name}");
         }
 
         private void Cleanup(GameObject prefab, int retainCount)
         {
             if (!this.TryGetPool(prefab, out var pool)) return;
             pool.Cleanup(retainCount);
-            this.logger.Debug($"Cleaned up {pool.gameObject.name}");
+            this.logger.Debug($"Cleaned up {pool.name}");
         }
 
         private void Unload(GameObject prefab)
@@ -164,7 +164,7 @@ namespace UniT.Pooling
             this.RecycleAll(prefab);
             pool.OnInstantiate -= this.OnInstantiate;
             Object.Destroy(pool.gameObject);
-            this.logger.Debug($"Destroyed {pool.gameObject.name}");
+            this.logger.Debug($"Destroyed {pool.name}");
         }
 
         private bool TryGetPool(GameObject prefab, [MaybeNullWhen(false)] out ObjectPool pool)
