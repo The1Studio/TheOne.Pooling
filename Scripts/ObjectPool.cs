@@ -44,7 +44,7 @@ namespace UniT.Pooling
         {
             while (this.pooledObjects.Count < count)
             {
-                var instance = this.Instantiate();
+                var instance = this.InstantiatePrefab();
                 instance.SetActive(false);
                 this.pooledObjects.Enqueue(instance);
             }
@@ -52,7 +52,7 @@ namespace UniT.Pooling
 
         public GameObject Spawn(Vector3 position = default, Quaternion rotation = default, Transform? parent = null)
         {
-            var instance = this.pooledObjects.DequeueOrDefault(this.Instantiate);
+            var instance = this.pooledObjects.DequeueOrDefault(this.InstantiatePrefab);
             instance.transform.SetPositionAndRotation(position, rotation);
             instance.transform.SetParent(parent);
             instance.SetActive(true);
@@ -95,7 +95,7 @@ namespace UniT.Pooling
 
         #region Private
 
-        private GameObject Instantiate()
+        private GameObject InstantiatePrefab()
         {
             var instance = Instantiate(this.prefab, this.transform);
             this.OnInstantiate?.Invoke(instance);
