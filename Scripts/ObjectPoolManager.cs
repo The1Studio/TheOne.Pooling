@@ -72,13 +72,9 @@ namespace UniT.Pooling
         }
         #endif
 
-        GameObject IObjectPoolManager.Spawn(GameObject prefab, Vector3 position, Quaternion rotation, Transform? parent) => this.Spawn(prefab, position, rotation, parent);
+        GameObject IObjectPoolManager.Spawn(GameObject prefab, Vector3 position, Quaternion rotation, Transform? parent, bool worldPositionStays) => this.Spawn(prefab, position, rotation, parent, worldPositionStays);
 
-        GameObject IObjectPoolManager.Spawn(string key, Vector3 position, Quaternion rotation, Transform? parent)
-        {
-            var prefab = this.keyToPrefab.GetOrAdd(key, () => this.assetsManager.Load<GameObject>(key));
-            return this.Spawn(prefab, position, rotation, parent);
-        }
+        GameObject IObjectPoolManager.Spawn(string key, Vector3 position, Quaternion rotation, Transform? parent, bool worldPositionStays) => this.Spawn(this.keyToPrefab.GetOrAdd(key, () => this.assetsManager.Load<GameObject>(key)), position, rotation, parent, worldPositionStays);
 
         void IObjectPoolManager.Recycle(GameObject instance)
         {
@@ -129,7 +125,7 @@ namespace UniT.Pooling
             }).Load(count);
         }
 
-        private GameObject Spawn(GameObject prefab, Vector3 position, Quaternion rotation, Transform? parent)
+        private GameObject Spawn(GameObject prefab, Vector3 position, Quaternion rotation, Transform? parent, bool worldPositionStays)
         {
             if (!this.prefabToPool.ContainsKey(prefab))
             {
@@ -137,7 +133,7 @@ namespace UniT.Pooling
                 this.logger.Warning($"Auto loaded {prefab.name} pool. Consider preload it with `Load` or `LoadAsync` for better performance.");
             }
             var pool     = this.prefabToPool[prefab];
-            var instance = pool.Spawn(position, rotation, parent);
+            var instance = pool.Spawn(position, rotation, parent, worldPositionStays);
             this.instanceToPool.Add(instance, pool);
             this.logger.Debug($"Spawned {instance.name}");
             return instance;
