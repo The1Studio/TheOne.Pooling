@@ -1,8 +1,8 @@
 {
-  "name": "com.frostbun.unit.pooling",
-  "displayName": "UniT Pooling",
+  "name": "com.theone.pooling",
+  "displayName": "TheOne Pooling",
   "description": "Object Pool Manager for Unity",
-  "version": "1.0.14",
+  "version": "1.0.0",
   "unity": "2022.3",
   "license": "MIT",
   "author": {
@@ -11,8 +11,8 @@
     "url": "https://github.com/frostbun"
   },
   "dependencies": {
-    "com.frostbun.unit.extensions": "1.0.53",
-    "com.frostbun.unit.logging": "1.0.7",
-    "com.frostbun.unit.resourcemanagement": "1.0.10"
+    "com.theone.extensions": "1.0.0",
+    "com.theone.logging": "1.0.0",
+    "com.theone.resourcemanagement": "1.0.0"
   }
 }
