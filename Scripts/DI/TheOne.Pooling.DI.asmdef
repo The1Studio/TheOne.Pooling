@@ -1,0 +1,29 @@
+﻿{
+  "name": "TheOne.Pooling.DI",
+  "rootNamespace": "TheOne.Pooling.DI",
+  "references": [
+    "TheOne.Logging.DI",
+    "TheOne.ResourceManagement.DI",
+    "TheOne.Pooling",
+    "TheOne.DI",
+    "Zenject",
+    "VContainer"
+  ],
+  "versionDefines": [
+    {
+      "name": "com.theone.di",
+      "expression": "",
+      "define": "THEONE_DI"
+    },
+    {
+      "name": "com.svermeulen.extenject",
+      "expression": "",
+      "define": "THEONE_ZENJECT"
+    },
+    {
+      "name": "jp.hadashikick.vcontainer",
+      "expression": "",
+      "define": "THEONE_VCONTAINER"
+    }
+  ]
+}

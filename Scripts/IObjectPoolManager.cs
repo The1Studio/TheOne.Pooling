@@ -1,10 +1,10 @@
 #nullable enable
-namespace UniT.Pooling
+namespace TheOne.Pooling
 {
     using System;
-    using UniT.Extensions;
+    using TheOne.Extensions;
     using UnityEngine;
-    #if UNIT_UNITASK
+    #if THEONE_UNITASK
     using System.Threading;
     using Cysharp.Threading.Tasks;
     #else
@@ -77,7 +77,7 @@ namespace UniT.Pooling
 
         #region Async
 
-        #if UNIT_UNITASK
+        #if THEONE_UNITASK
         public UniTask LoadAsync(object key, int count = 1, IProgress<float>? progress = null, CancellationToken cancellationToken = default);
 
         public UniTask LoadAsync<T>(int count = 1, IProgress<float>? progress = null, CancellationToken cancellationToken = default) => this.LoadAsync(typeof(T).GetKey(), count, progress, cancellationToken);
