@@ -1,10 +1,10 @@
-#if UNIT_DI
+#if THEONE_DI
 #nullable enable
-namespace UniT.Pooling.DI
+namespace TheOne.Pooling.DI
 {
-    using UniT.DI;
-    using UniT.Logging.DI;
-    using UniT.ResourceManagement.DI;
+    using TheOne.DI;
+    using TheOne.Logging.DI;
+    using TheOne.ResourceManagement.DI;
 
     public static class ObjectPoolManagerDI
     {
