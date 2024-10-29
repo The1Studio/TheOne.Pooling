@@ -1,9 +1,9 @@
-#if UNIT_VCONTAINER
+#if THEONE_VCONTAINER
 #nullable enable
-namespace UniT.Pooling.DI
+namespace TheOne.Pooling.DI
 {
-    using UniT.Logging.DI;
-    using UniT.ResourceManagement.DI;
+    using TheOne.Logging.DI;
+    using TheOne.ResourceManagement.DI;
     using VContainer;
 
     public static class ObjectPoolManagerVContainer
