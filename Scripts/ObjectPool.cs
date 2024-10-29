@@ -1,9 +1,9 @@
 #nullable enable
-namespace UniT.Pooling
+namespace TheOne.Pooling
 {
     using System;
     using System.Collections.Generic;
-    using UniT.Extensions;
+    using TheOne.Extensions;
     using UnityEngine;
 
     public sealed class ObjectPool : MonoBehaviour
