@@ -55,7 +55,7 @@ namespace UniT.Pooling
         #if UNIT_UNITASK
         async UniTask IObjectPoolManager.LoadAsync(string key, int count, IProgress<float>? progress, CancellationToken cancellationToken)
         {
-            var prefab = await this.assetsManager.LoadAsync<GameObject>(key, progress, cancellationToken);
+            var prefab = await this.keyToPrefab.GetOrAddAsync(key, () => this.assetsManager.LoadAsync<GameObject>(key, progress, cancellationToken));
             this.Load(prefab, count);
         }
         #else
@@ -105,6 +105,7 @@ namespace UniT.Pooling
         {
             if (!this.TryGetPrefab(key, out var prefab)) return;
             this.Unload(prefab);
+            this.keyToPrefab.Remove(key);
             this.assetsManager.Unload(key);
         }
 
