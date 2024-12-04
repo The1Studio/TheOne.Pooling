@@ -105,8 +105,8 @@ namespace UniT.Pooling
         {
             if (!this.TryGetPrefab(key, out var prefab)) return;
             this.Unload(prefab);
-            this.keyToPrefab.Remove(key);
             this.assetsManager.Unload(key);
+            this.keyToPrefab.Remove(key);
         }
 
         #endregion
@@ -161,6 +161,7 @@ namespace UniT.Pooling
             this.RecycleAll(prefab);
             pool.OnInstantiate -= this.OnInstantiate;
             Object.Destroy(pool.gameObject);
+            this.prefabToPool.Remove(prefab);
             this.logger.Debug($"Destroyed {pool.name}");
         }
 
