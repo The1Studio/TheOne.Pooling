@@ -78,7 +78,7 @@ namespace UniT.Pooling
 
         void IObjectPoolManager.Recycle(GameObject instance)
         {
-            if (!this.instanceToPool.Remove(instance, out var pool)) throw new InvalidOperationException($"{instance.name} was not spawned from {this.poolsContainer.name}");
+            if (!this.instanceToPool.Remove(instance, out var pool)) throw new InvalidOperationException($"{instance.name} was not spawned from {nameof(ObjectPoolManager)}");
             pool.Recycle(instance);
             this.logger.Debug($"Recycled {instance.name}");
         }
