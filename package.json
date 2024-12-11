@@ -2,7 +2,7 @@
   "name": "com.frostbun.unit.pooling",
   "displayName": "UniT Pooling",
   "description": "Object Pool Manager for Unity",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "unity": "2022.3",
   "license": "MIT",
   "author": {
@@ -11,8 +11,8 @@
     "url": "https://github.com/frostbun"
   },
   "dependencies": {
-    "com.frostbun.unit.extensions": "1.0.51",
+    "com.frostbun.unit.extensions": "1.0.53",
     "com.frostbun.unit.logging": "1.0.7",
-    "com.frostbun.unit.resourcemanagement": "1.0.9"
+    "com.frostbun.unit.resourcemanagement": "1.0.10"
   }
 }

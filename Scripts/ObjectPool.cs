@@ -50,19 +50,19 @@ namespace UniT.Pooling
             }
         }
 
-        public GameObject Spawn(Vector3 position = default, Quaternion rotation = default, Transform? parent = null, bool worldPositionStays = true)
+        public GameObject Spawn(Vector3 position = default, Quaternion rotation = default, Transform? parent = null, bool spawnInWorldSpace = true)
         {
             var instance = this.pooledObjects.DequeueOrDefault(this.InstantiatePrefab);
             instance.transform.SetPositionAndRotation(position, rotation);
-            instance.transform.SetParent(parent, worldPositionStays);
+            instance.transform.SetParent(parent, spawnInWorldSpace);
             instance.SetActive(true);
             this.spawnedObjects.Add(instance);
             return instance;
         }
 
-        public T Spawn<T>(Vector3 position = default, Quaternion rotation = default, Transform? parent = null, bool worldPositionStays = true)
+        public T Spawn<T>(Vector3 position = default, Quaternion rotation = default, Transform? parent = null, bool spawnInWorldSpace = true)
         {
-            return this.Spawn(position, rotation, parent, worldPositionStays).GetComponentOrThrow<T>();
+            return this.Spawn(position, rotation, parent, spawnInWorldSpace).GetComponentOrThrow<T>();
         }
 
         public void Recycle(GameObject instance)
