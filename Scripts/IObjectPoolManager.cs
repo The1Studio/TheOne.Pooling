@@ -41,9 +41,9 @@ namespace UniT.Pooling
 
         public void Load(Component component, int count = 1) => this.Load(component.gameObject, count);
 
-        public T Spawn<T>(T component, Vector3 position = default, Quaternion rotation = default, Transform? parent = null) where T : Component => this.Spawn(component.gameObject, position, rotation, parent).GetComponent<T>();
+        public T Spawn<T>(T component, Vector3 position = default, Quaternion rotation = default, Transform? parent = null, bool spawnInWorldSpace = true) where T : Component => this.Spawn(component.gameObject, position, rotation, parent, spawnInWorldSpace).GetComponent<T>();
 
-        public T Spawn<T>(string key, Vector3 position = default, Quaternion rotation = default, Transform? parent = null) => this.Spawn(key, position, rotation, parent).GetComponentOrThrow<T>();
+        public T Spawn<T>(string key, Vector3 position = default, Quaternion rotation = default, Transform? parent = null, bool spawnInWorldSpace = true) => this.Spawn(key, position, rotation, parent, spawnInWorldSpace).GetComponentOrThrow<T>();
 
         public void Recycle(Component component) => this.Recycle(component.gameObject);
 
