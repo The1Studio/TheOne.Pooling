@@ -15,6 +15,8 @@ namespace UniT.Pooling
     {
         public event Action<GameObject> OnInstantiate;
 
+        public event Action<GameObject> OnCleanup;
+
         public void Load(GameObject prefab, int count = 1);
 
         public void Load(string key, int count = 1);

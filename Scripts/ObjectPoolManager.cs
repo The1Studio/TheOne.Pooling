@@ -44,6 +44,8 @@ namespace UniT.Pooling
 
         event Action<GameObject> IObjectPoolManager.OnInstantiate { add => this.onInstantiate += value; remove => this.onInstantiate -= value; }
 
+        event Action<GameObject> IObjectPoolManager.OnCleanup { add => this.onCleanup += value; remove => this.onCleanup -= value; }
+
         void IObjectPoolManager.Load(GameObject prefab, int count) => this.Load(prefab, count);
 
         void IObjectPoolManager.Load(string key, int count)
@@ -114,13 +116,15 @@ namespace UniT.Pooling
         #region Private
 
         private Action<GameObject>? onInstantiate;
+        private Action<GameObject>? onCleanup;
 
         private void Load(GameObject prefab, int count)
         {
             this.prefabToPool.GetOrAdd(prefab, () =>
             {
                 var pool = ObjectPool.Construct(prefab, this.poolsContainer);
-                pool.OnInstantiate += this.OnInstantiate;
+                pool.OnInstantiate += this.InvokeOnInstantiate;
+                pool.OnCleanup     += this.InvokeOnCleanup;
                 this.logger.Debug($"Instantiated {pool.name}");
                 return pool;
             }).Load(count);
@@ -159,7 +163,8 @@ namespace UniT.Pooling
         {
             if (!this.TryGetPool(prefab, out var pool)) return;
             this.RecycleAll(prefab);
-            pool.OnInstantiate -= this.OnInstantiate;
+            pool.OnInstantiate -= this.InvokeOnInstantiate;
+            pool.OnCleanup     -= this.InvokeOnCleanup;
             Object.Destroy(pool.gameObject);
             this.prefabToPool.Remove(prefab);
             this.logger.Debug($"Destroyed {pool.name}");
@@ -179,7 +184,9 @@ namespace UniT.Pooling
             return false;
         }
 
-        private void OnInstantiate(GameObject instance) => this.onInstantiate?.Invoke(instance);
+        private void InvokeOnInstantiate(GameObject instance) => this.onInstantiate?.Invoke(instance);
+
+        private void InvokeOnCleanup(GameObject instance) => this.onCleanup?.Invoke(instance);
 
         #endregion
     }

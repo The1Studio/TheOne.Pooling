@@ -39,6 +39,7 @@ namespace UniT.Pooling
         #region Public
 
         public event Action<GameObject>? OnInstantiate;
+        public event Action<GameObject>? OnCleanup;
 
         public void Load(int count)
         {
@@ -87,7 +88,9 @@ namespace UniT.Pooling
         {
             while (this.pooledObjects.Count > retainCount)
             {
-                Destroy(this.pooledObjects.Dequeue());
+                var instance = this.pooledObjects.Dequeue();
+                this.OnCleanup?.Invoke(instance);
+                Destroy(instance);
             }
         }
 
