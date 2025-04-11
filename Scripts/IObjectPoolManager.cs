@@ -13,9 +13,13 @@ namespace UniT.Pooling
 
     public interface IObjectPoolManager
     {
-        public event Action<GameObject> OnInstantiate;
+        public event Action<GameObject> Instantiated;
 
-        public event Action<GameObject> OnCleanup;
+        public event Action<GameObject> Spawned;
+
+        public event Action<GameObject> Recycled;
+
+        public event Action<GameObject> CleanedUp;
 
         public void Load(GameObject prefab, int count = 1);
 

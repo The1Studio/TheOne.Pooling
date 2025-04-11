@@ -38,14 +38,16 @@ namespace UniT.Pooling
 
         #region Public
 
-        public event Action<GameObject>? OnInstantiate;
-        public event Action<GameObject>? OnCleanup;
+        public event Action<GameObject>? Instantiated;
+        public event Action<GameObject>? Spawned;
+        public event Action<GameObject>? Recycled;
+        public event Action<GameObject>? CleanedUp;
 
         public void Load(int count)
         {
             while (this.pooledObjects.Count < count)
             {
-                var instance = this.InstantiatePrefab();
+                var instance = this.Instantiate();
                 instance.SetActive(false);
                 this.pooledObjects.Enqueue(instance);
             }
@@ -53,11 +55,12 @@ namespace UniT.Pooling
 
         public GameObject Spawn(Vector3 position = default, Quaternion rotation = default, Transform? parent = null, bool spawnInWorldSpace = true)
         {
-            var instance = this.pooledObjects.DequeueOrDefault(this.InstantiatePrefab);
+            var instance = this.pooledObjects.DequeueOrDefault(this.Instantiate);
             instance.transform.SetPositionAndRotation(position, rotation);
             instance.transform.SetParent(parent, spawnInWorldSpace);
             instance.SetActive(true);
             this.spawnedObjects.Add(instance);
+            this.Spawned?.Invoke(instance);
             return instance;
         }
 
@@ -72,6 +75,7 @@ namespace UniT.Pooling
             instance.SetActive(false);
             instance.transform.SetParent(this.transform);
             this.pooledObjects.Enqueue(instance);
+            this.Recycled?.Invoke(instance);
         }
 
         public void Recycle<T>(T component) where T : Component
@@ -89,8 +93,8 @@ namespace UniT.Pooling
             while (this.pooledObjects.Count > retainCount)
             {
                 var instance = this.pooledObjects.Dequeue();
-                this.OnCleanup?.Invoke(instance);
                 Destroy(instance);
+                this.CleanedUp?.Invoke(instance);
             }
         }
 
@@ -98,10 +102,10 @@ namespace UniT.Pooling
 
         #region Private
 
-        private GameObject InstantiatePrefab()
+        private GameObject Instantiate()
         {
             var instance = Instantiate(this.prefab, this.transform);
-            this.OnInstantiate?.Invoke(instance);
+            this.Instantiated?.Invoke(instance);
             return instance;
         }
 

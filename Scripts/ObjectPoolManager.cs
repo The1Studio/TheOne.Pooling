@@ -18,7 +18,7 @@ namespace UniT.Pooling
     using System.Collections;
     #endif
 
-    public sealed class ObjectPoolManager : IObjectPoolManager
+    public class ObjectPoolManager : IObjectPoolManager
     {
         #region Constructor
 
@@ -42,9 +42,10 @@ namespace UniT.Pooling
 
         #region Public
 
-        event Action<GameObject> IObjectPoolManager.OnInstantiate { add => this.onInstantiate += value; remove => this.onInstantiate -= value; }
-
-        event Action<GameObject> IObjectPoolManager.OnCleanup { add => this.onCleanup += value; remove => this.onCleanup -= value; }
+        event Action<GameObject> IObjectPoolManager.Instantiated { add => this.instantiated += value; remove => this.instantiated -= value; }
+        event Action<GameObject> IObjectPoolManager.Spawned      { add => this.spawned += value;      remove => this.spawned -= value; }
+        event Action<GameObject> IObjectPoolManager.Recycled     { add => this.recycled += value;     remove => this.recycled -= value; }
+        event Action<GameObject> IObjectPoolManager.CleanedUp    { add => this.cleanedUp += value;    remove => this.cleanedUp -= value; }
 
         void IObjectPoolManager.Load(GameObject prefab, int count) => this.Load(prefab, count);
 
@@ -115,16 +116,20 @@ namespace UniT.Pooling
 
         #region Private
 
-        private Action<GameObject>? onInstantiate;
-        private Action<GameObject>? onCleanup;
+        private Action<GameObject>? instantiated;
+        private Action<GameObject>? spawned;
+        private Action<GameObject>? recycled;
+        private Action<GameObject>? cleanedUp;
 
         private void Load(GameObject prefab, int count)
         {
             this.prefabToPool.GetOrAdd(prefab, () =>
             {
                 var pool = ObjectPool.Construct(prefab, this.poolsContainer);
-                pool.OnInstantiate += this.InvokeOnInstantiate;
-                pool.OnCleanup     += this.InvokeOnCleanup;
+                pool.Instantiated += this.OnInstantiated;
+                pool.Spawned      += this.OnSpawned;
+                pool.Recycled     += this.OnRecycled;
+                pool.CleanedUp    += this.OnCleanedUp;
                 this.logger.Debug($"Instantiated {pool.name}");
                 return pool;
             }).Load(count);
@@ -163,8 +168,10 @@ namespace UniT.Pooling
         {
             if (!this.TryGetPool(prefab, out var pool)) return;
             this.RecycleAll(prefab);
-            pool.OnInstantiate -= this.InvokeOnInstantiate;
-            pool.OnCleanup     -= this.InvokeOnCleanup;
+            pool.Instantiated -= this.OnInstantiated;
+            pool.Spawned      -= this.OnSpawned;
+            pool.Recycled     -= this.OnRecycled;
+            pool.CleanedUp    -= this.OnCleanedUp;
             Object.Destroy(pool.gameObject);
             this.prefabToPool.Remove(prefab);
             this.logger.Debug($"Destroyed {pool.name}");
@@ -184,9 +191,10 @@ namespace UniT.Pooling
             return false;
         }
 
-        private void InvokeOnInstantiate(GameObject instance) => this.onInstantiate?.Invoke(instance);
-
-        private void InvokeOnCleanup(GameObject instance) => this.onCleanup?.Invoke(instance);
+        private void OnInstantiated(GameObject instance) => this.instantiated?.Invoke(instance);
+        private void OnSpawned(GameObject      instance) => this.spawned?.Invoke(instance);
+        private void OnRecycled(GameObject     instance) => this.recycled?.Invoke(instance);
+        private void OnCleanedUp(GameObject    instance) => this.cleanedUp?.Invoke(instance);
 
         #endregion
     }
