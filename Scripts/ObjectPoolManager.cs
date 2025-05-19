@@ -65,10 +65,10 @@ namespace UniT.Pooling
         IEnumerator IObjectPoolManager.LoadAsync(string key, int count, Action? callback, IProgress<float>? progress)
         {
             var prefab = default(GameObject)!;
-            yield return this.assetsManager.LoadAsync<GameObject>(
+            yield return this.keyToPrefab.GetOrAddAsync(
                 key,
-                result => prefab = result,
-                progress
+                callback => this.assetsManager.LoadAsync(key, callback, progress),
+                result => prefab = result
             );
             this.Load(prefab, count);
             callback?.Invoke();
