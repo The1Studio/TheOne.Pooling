@@ -77,7 +77,11 @@ namespace UniT.Pooling
 
         GameObject IObjectPoolManager.Spawn(GameObject prefab, Vector3 position, Quaternion rotation, Transform? parent, bool spawnInWorldSpace) => this.Spawn(prefab, position, rotation, parent, spawnInWorldSpace);
 
-        GameObject IObjectPoolManager.Spawn(string key, Vector3 position, Quaternion rotation, Transform? parent, bool spawnInWorldSpace) => this.Spawn(this.keyToPrefab.GetOrAdd(key, () => this.assetsManager.Load<GameObject>(key)), position, rotation, parent, spawnInWorldSpace);
+        GameObject IObjectPoolManager.Spawn(string key, Vector3 position, Quaternion rotation, Transform? parent, bool spawnInWorldSpace)
+        {
+            var prefab = this.keyToPrefab.GetOrAdd(key, () => this.assetsManager.Load<GameObject>(key));
+            return this.Spawn(prefab, position, rotation, parent, spawnInWorldSpace);
+        }
 
         void IObjectPoolManager.Recycle(GameObject instance)
         {
