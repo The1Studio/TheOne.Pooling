@@ -45,19 +45,19 @@ namespace UniT.Pooling
 
         #region Component
 
-        public void Load(Component component, int count = 1) => this.Load(component.gameObject, count);
+        public void Load(Component prefab, int count = 1) => this.Load(prefab.gameObject, count);
 
-        public T Spawn<T>(T component, Vector3 position = default, Quaternion rotation = default, Transform? parent = null, bool spawnInWorldSpace = true) where T : Component => this.Spawn(component.gameObject, position, rotation, parent, spawnInWorldSpace).GetComponent<T>();
+        public T Spawn<T>(T prefab, Vector3 position = default, Quaternion rotation = default, Transform? parent = null, bool spawnInWorldSpace = true) where T : Component => this.Spawn(prefab.gameObject, position, rotation, parent, spawnInWorldSpace).GetComponent<T>();
 
         public T Spawn<T>(string key, Vector3 position = default, Quaternion rotation = default, Transform? parent = null, bool spawnInWorldSpace = true) => this.Spawn(key, position, rotation, parent, spawnInWorldSpace).GetComponentOrThrow<T>();
 
-        public void Recycle(Component component) => this.Recycle(component.gameObject);
+        public void Recycle(Component prefab) => this.Recycle(prefab.gameObject);
 
-        public void RecycleAll(Component component) => this.RecycleAll(component.gameObject);
+        public void RecycleAll(Component prefab) => this.RecycleAll(prefab.gameObject);
 
-        public void Cleanup(Component component, int retainCount = 1) => this.Cleanup(component.gameObject, retainCount);
+        public void Cleanup(Component prefab, int retainCount = 1) => this.Cleanup(prefab.gameObject, retainCount);
 
-        public void Unload(Component component) => this.Unload(component.gameObject);
+        public void Unload(Component prefab) => this.Unload(prefab.gameObject);
 
         #endregion
 
