@@ -26,12 +26,17 @@ namespace TheOne.Pooling
             return pool;
         }
 
+        private Transform? cachedTransform;
+        
         // ReSharper disable once InconsistentNaming
-        public new Transform transform { get; private set; } = null!;
-
-        private void Awake()
+        public new Transform transform
         {
-            this.transform = base.transform;
+            get
+            {
+                if (this.cachedTransform == null)
+                    this.cachedTransform = base.transform;
+                return this.cachedTransform;
+            }
         }
 
         #endregion
@@ -45,6 +50,9 @@ namespace TheOne.Pooling
 
         public void Load(int count)
         {
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(count), "Count cannot be negative");
+            
             while (this.pooledObjects.Count < count)
             {
                 var instance = this.Instantiate();
@@ -71,7 +79,18 @@ namespace TheOne.Pooling
 
         public void Recycle(GameObject instance)
         {
-            if (!this.spawnedObjects.Remove(instance)) throw new InvalidOperationException($"{instance.name} was not spawned from {this.name}");
+            if (instance == null)
+                throw new ArgumentNullException(nameof(instance));
+            
+            if (!this.spawnedObjects.Remove(instance))
+                throw new InvalidOperationException($"{instance.name} was not spawned from {this.name}");
+            
+            // Check if object was destroyed
+            if (instance == null || instance.Equals(null))
+            {
+                return;
+            }
+            
             instance.SetActive(false);
             instance.transform.SetParent(this.transform);
             this.pooledObjects.Enqueue(instance);
@@ -90,11 +109,17 @@ namespace TheOne.Pooling
 
         public void Cleanup(int retainCount = 1)
         {
+            if (retainCount < 0)
+                throw new ArgumentOutOfRangeException(nameof(retainCount), "Retain count cannot be negative");
+            
             while (this.pooledObjects.Count > retainCount)
             {
                 var instance = this.pooledObjects.Dequeue();
-                Destroy(instance);
-                this.CleanedUp?.Invoke(instance);
+                if (instance != null)
+                {
+                    this.CleanedUp?.Invoke(instance);
+                    Destroy(instance);
+                }
             }
         }
 
@@ -104,6 +129,9 @@ namespace TheOne.Pooling
 
         private GameObject Instantiate()
         {
+            if (this.prefab == null)
+                throw new InvalidOperationException("Prefab is null, cannot instantiate");
+            
             var instance = Instantiate(this.prefab, this.transform);
             this.Instantiated?.Invoke(instance);
             return instance;
