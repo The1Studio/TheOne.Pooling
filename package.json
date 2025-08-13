@@ -10,6 +10,13 @@
     "email": "manhnb1911@gmail.com",
     "url": "https://github.com/frostbun"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/The1Studio/TheOne.Pooling.git"
+  },
+  "publishConfig": {
+    "registry": "https://upm.the1studio.org/"
+  },
   "dependencies": {
     "com.theone.extensions": "1.1.25",
     "com.theone.logging": "1.1.0",
