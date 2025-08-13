@@ -2,8 +2,10 @@
 namespace TheOne.Pooling
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
+    using System.Linq;
     using TheOne.Extensions;
     using TheOne.Logging;
     using TheOne.ResourceManagement;
@@ -18,17 +20,19 @@ namespace TheOne.Pooling
     using System.Collections;
     #endif
 
-    public class ObjectPoolManager : IObjectPoolManager
+    public class ObjectPoolManager : IObjectPoolManager, IDisposable
     {
         #region Constructor
 
         private readonly IAssetsManager assetsManager;
         private readonly ILogger        logger;
 
-        private readonly Transform                          poolsContainer = new GameObject(nameof(ObjectPoolManager)).DontDestroyOnLoad().transform;
-        private readonly Dictionary<string, GameObject>     keyToPrefab    = new Dictionary<string, GameObject>();
-        private readonly Dictionary<GameObject, ObjectPool> prefabToPool   = new Dictionary<GameObject, ObjectPool>();
-        private readonly Dictionary<GameObject, ObjectPool> instanceToPool = new Dictionary<GameObject, ObjectPool>();
+        private readonly Transform                                      poolsContainer = new GameObject(nameof(ObjectPoolManager)).DontDestroyOnLoad().transform;
+        private readonly ConcurrentDictionary<string, GameObject>       keyToPrefab    = new ConcurrentDictionary<string, GameObject>();
+        private readonly ConcurrentDictionary<GameObject, ObjectPool>   prefabToPool   = new ConcurrentDictionary<GameObject, ObjectPool>();
+        private readonly ConcurrentDictionary<GameObject, ObjectPool>   instanceToPool = new ConcurrentDictionary<GameObject, ObjectPool>();
+        private readonly object poolLock = new object();
+        private bool disposed;
 
         [Preserve]
         public ObjectPoolManager(IAssetsManager assetsManager, ILoggerManager loggerManager)
@@ -51,19 +55,34 @@ namespace TheOne.Pooling
 
         void IObjectPoolManager.Load(string key, int count)
         {
-            var prefab = this.keyToPrefab.GetOrAdd(key, () => this.assetsManager.Load<GameObject>(key));
+            if (string.IsNullOrWhiteSpace(key))
+                throw new ArgumentException("Key cannot be null or empty", nameof(key));
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(count), "Count cannot be negative");
+            
+            var prefab = this.keyToPrefab.GetOrAdd(key, k => this.assetsManager.Load<GameObject>(k));
             this.Load(prefab, count);
         }
 
         #if THEONE_UNITASK
         async UniTask IObjectPoolManager.LoadAsync(string key, int count, IProgress<float>? progress, CancellationToken cancellationToken)
         {
+            if (string.IsNullOrWhiteSpace(key))
+                throw new ArgumentException("Key cannot be null or empty", nameof(key));
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(count), "Count cannot be negative");
+            
             var prefab = await this.keyToPrefab.GetOrAddAsync(key, () => this.assetsManager.LoadAsync<GameObject>(key, progress, cancellationToken));
             this.Load(prefab, count);
         }
         #else
         IEnumerator IObjectPoolManager.LoadAsync(string key, int count, Action? callback, IProgress<float>? progress)
         {
+            if (string.IsNullOrWhiteSpace(key))
+                throw new ArgumentException("Key cannot be null or empty", nameof(key));
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(count), "Count cannot be negative");
+            
             var prefab = default(GameObject)!;
             yield return this.keyToPrefab.GetOrAddAsync(
                 key,
@@ -79,13 +98,28 @@ namespace TheOne.Pooling
 
         GameObject IObjectPoolManager.Spawn(string key, Vector3 position, Quaternion rotation, Transform? parent, bool spawnInWorldSpace)
         {
-            var prefab = this.keyToPrefab.GetOrAdd(key, () => this.assetsManager.Load<GameObject>(key));
+            if (string.IsNullOrWhiteSpace(key))
+                throw new ArgumentException("Key cannot be null or empty", nameof(key));
+            
+            var prefab = this.keyToPrefab.GetOrAdd(key, k => this.assetsManager.Load<GameObject>(k));
             return this.Spawn(prefab, position, rotation, parent, spawnInWorldSpace);
         }
 
         void IObjectPoolManager.Recycle(GameObject instance)
         {
-            if (!this.instanceToPool.Remove(instance, out var pool)) throw new InvalidOperationException($"{instance.name} was not spawned from {nameof(ObjectPoolManager)}");
+            if (instance == null)
+                throw new ArgumentNullException(nameof(instance));
+            
+            if (!this.instanceToPool.TryRemove(instance, out var pool))
+                throw new InvalidOperationException($"{instance.name} was not spawned from {nameof(ObjectPoolManager)}");
+            
+            // Check if object was destroyed
+            if (instance == null || instance.Equals(null))
+            {
+                this.logger.Warning($"Attempted to recycle destroyed object");
+                return;
+            }
+            
             pool.Recycle(instance);
             this.logger.Debug($"Recycled {instance.name}");
         }
@@ -113,7 +147,7 @@ namespace TheOne.Pooling
             if (!this.TryGetPrefab(key, out var prefab)) return;
             this.Unload(prefab);
             this.assetsManager.Unload(key);
-            this.keyToPrefab.Remove(key);
+            this.keyToPrefab.TryRemove(key, out _);
         }
 
         #endregion
@@ -127,42 +161,71 @@ namespace TheOne.Pooling
 
         private void Load(GameObject prefab, int count)
         {
-            this.prefabToPool.GetOrAdd(prefab, () =>
+            if (prefab == null)
+                throw new ArgumentNullException(nameof(prefab));
+            
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(count), "Count cannot be negative");
+            
+            var pool = this.prefabToPool.GetOrAdd(prefab, p =>
             {
-                var pool = ObjectPool.Construct(prefab, this.poolsContainer);
-                pool.Instantiated += this.OnInstantiated;
-                pool.Spawned      += this.OnSpawned;
-                pool.Recycled     += this.OnRecycled;
-                pool.CleanedUp    += this.OnCleanedUp;
-                this.logger.Debug($"Instantiated {pool.name}");
-                return pool;
-            }).Load(count);
+                lock (this.poolLock)
+                {
+                    if (this.prefabToPool.TryGetValue(p, out var existing))
+                        return existing;
+                    
+                    var newPool = ObjectPool.Construct(p, this.poolsContainer);
+                    newPool.Instantiated += this.OnInstantiated;
+                    newPool.Spawned      += this.OnSpawned;
+                    newPool.Recycled     += this.OnRecycled;
+                    newPool.CleanedUp    += this.OnCleanedUp;
+                    this.logger.Debug($"Instantiated {newPool.name}");
+                    return newPool;
+                }
+            });
+            pool.Load(count);
         }
 
         private GameObject Spawn(GameObject prefab, Vector3 position, Quaternion rotation, Transform? parent, bool spawnInWorldSpace)
         {
-            if (!this.prefabToPool.ContainsKey(prefab))
+            if (prefab == null)
+                throw new ArgumentNullException(nameof(prefab));
+            
+            if (this.disposed)
+                throw new ObjectDisposedException(nameof(ObjectPoolManager));
+            
+            if (!this.prefabToPool.TryGetValue(prefab, out var pool))
             {
+                this.logger.Warning($"Auto loading {prefab.name} pool. Consider preloading it with `Load` or `LoadAsync` for better performance.");
                 this.Load(prefab, 1);
-                this.logger.Warning($"Auto loaded {prefab.name} pool. Consider preload it with `Load` or `LoadAsync` for better performance.");
+                pool = this.prefabToPool[prefab];
             }
-            var pool     = this.prefabToPool[prefab];
+            
             var instance = pool.Spawn(position, rotation, parent, spawnInWorldSpace);
-            this.instanceToPool.Add(instance, pool);
+            this.instanceToPool.TryAdd(instance, pool);
             this.logger.Debug($"Spawned {instance.name}");
             return instance;
         }
 
         private void RecycleAll(GameObject prefab)
         {
+            if (prefab == null) return;
             if (!this.TryGetPool(prefab, out var pool)) return;
             pool.RecycleAll();
-            this.instanceToPool.RemoveWhere((_, otherPool) => otherPool == pool);
+            
+            // Remove all instances from this pool from tracking
+            var instancesToRemove = this.instanceToPool.Where(kvp => kvp.Value == pool).Select(kvp => kvp.Key).ToList();
+            foreach (var inst in instancesToRemove)
+            {
+                this.instanceToPool.TryRemove(inst, out _);
+            }
+            
             this.logger.Debug($"Recycled all {pool.name}");
         }
 
         private void Cleanup(GameObject prefab, int retainCount)
         {
+            if (prefab == null) return;
             if (!this.TryGetPool(prefab, out var pool)) return;
             pool.Cleanup(retainCount);
             this.logger.Debug($"Cleaned up {pool.name}");
@@ -171,34 +234,97 @@ namespace TheOne.Pooling
         private void Unload(GameObject prefab)
         {
             if (!this.TryGetPool(prefab, out var pool)) return;
-            this.RecycleAll(prefab);
+            
+            // Unsubscribe from events before destroying
             pool.Instantiated -= this.OnInstantiated;
             pool.Spawned      -= this.OnSpawned;
             pool.Recycled     -= this.OnRecycled;
             pool.CleanedUp    -= this.OnCleanedUp;
-            Object.Destroy(pool.gameObject);
-            this.prefabToPool.Remove(prefab);
-            this.logger.Debug($"Destroyed {pool.name}");
-        }
-
-        private bool TryGetPool(GameObject prefab, [MaybeNullWhen(false)] out ObjectPool pool)
-        {
-            if (this.prefabToPool.TryGetValue(prefab, out pool)) return true;
-            this.logger.Warning($"{prefab.name} pool not loaded");
-            return false;
+            
+            pool.RecycleAll();
+            pool.Cleanup(0);
+            
+            if (pool.gameObject != null)
+                Object.Destroy(pool.gameObject);
+            
+            this.prefabToPool.TryRemove(prefab, out _);
+            this.logger.Debug($"Unloaded {prefab.name}");
         }
 
         private bool TryGetPrefab(string key, [MaybeNullWhen(false)] out GameObject prefab)
         {
-            if (this.keyToPrefab.TryGetValue(key, out prefab)) return true;
-            this.logger.Warning($"{key} pool not loaded");
-            return false;
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                prefab = null;
+                return false;
+            }
+            return this.keyToPrefab.TryGetValue(key, out prefab);
         }
 
-        private void OnInstantiated(GameObject instance) => this.instantiated?.Invoke(instance);
-        private void OnSpawned(GameObject      instance) => this.spawned?.Invoke(instance);
-        private void OnRecycled(GameObject     instance) => this.recycled?.Invoke(instance);
-        private void OnCleanedUp(GameObject    instance) => this.cleanedUp?.Invoke(instance);
+        private bool TryGetPool(GameObject prefab, [MaybeNullWhen(false)] out ObjectPool pool) => this.prefabToPool.TryGetValue(prefab, out pool);
+
+        private void OnInstantiated(GameObject instance)
+        {
+            this.instantiated?.Invoke(instance);
+            this.logger.Debug($"Instantiated {instance.name}");
+        }
+
+        private void OnSpawned(GameObject instance)
+        {
+            this.spawned?.Invoke(instance);
+        }
+
+        private void OnRecycled(GameObject instance)
+        {
+            this.recycled?.Invoke(instance);
+        }
+
+        private void OnCleanedUp(GameObject instance)
+        {
+            this.cleanedUp?.Invoke(instance);
+        }
+
+        #endregion
+
+        #region Disposal
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (this.disposed)
+                return;
+
+            if (disposing)
+            {
+                // Unload all pools
+                foreach (var kvp in this.prefabToPool.ToArray())
+                {
+                    this.Unload(kvp.Key);
+                }
+
+                // Destroy the container
+                if (this.poolsContainer != null)
+                    Object.Destroy(this.poolsContainer.gameObject);
+
+                // Clear collections
+                this.keyToPrefab.Clear();
+                this.prefabToPool.Clear();
+                this.instanceToPool.Clear();
+            }
+
+            this.disposed = true;
+            this.logger.Debug("Disposed");
+        }
+
+        ~ObjectPoolManager()
+        {
+            Dispose(false);
+        }
 
         #endregion
     }
