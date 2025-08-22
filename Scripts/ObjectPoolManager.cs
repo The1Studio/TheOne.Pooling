@@ -18,7 +18,7 @@ namespace UniT.Pooling
     using System.Collections;
     #endif
 
-    public class ObjectPoolManager : IObjectPoolManager
+    public sealed class ObjectPoolManager : IObjectPoolManager
     {
         #region Constructor
 
