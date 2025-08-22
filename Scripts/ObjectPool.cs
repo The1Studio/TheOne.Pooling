@@ -78,9 +78,9 @@ namespace UniT.Pooling
             this.Recycled?.Invoke(instance);
         }
 
-        public void Recycle<T>(T component) where T : Component
+        public void Recycle<T>(T instance) where T : Component
         {
-            this.Recycle(component.gameObject);
+            this.Recycle(instance.gameObject);
         }
 
         public void RecycleAll()

@@ -51,7 +51,7 @@ namespace UniT.Pooling
 
         public T Spawn<T>(string key, Vector3 position = default, Quaternion rotation = default, Transform? parent = null, bool spawnInWorldSpace = true) => this.Spawn(key, position, rotation, parent, spawnInWorldSpace).GetComponentOrThrow<T>();
 
-        public void Recycle(Component prefab) => this.Recycle(prefab.gameObject);
+        public void Recycle(Component instance) => this.Recycle(instance.gameObject);
 
         public void RecycleAll(Component prefab) => this.RecycleAll(prefab.gameObject);
 
