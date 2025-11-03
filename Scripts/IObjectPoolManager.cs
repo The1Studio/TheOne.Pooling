@@ -25,9 +25,9 @@ namespace UniT.Pooling
 
         public void Load(string key, int count = 1);
 
-        public GameObject Spawn(GameObject prefab, Vector3 position = default, Quaternion rotation = default, Transform? parent = null, bool spawnInWorldSpace = true);
+        public GameObject Spawn(GameObject prefab, Vector3? position = null, Quaternion? rotation = null, Transform? parent = null, bool spawnInWorldSpace = true);
 
-        public GameObject Spawn(string key, Vector3 position = default, Quaternion rotation = default, Transform? parent = null, bool spawnInWorldSpace = true);
+        public GameObject Spawn(string key, Vector3? position = null, Quaternion? rotation = null, Transform? parent = null, bool spawnInWorldSpace = true);
 
         public void Recycle(GameObject instance);
 

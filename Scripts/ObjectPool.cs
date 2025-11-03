@@ -32,6 +32,7 @@ namespace UniT.Pooling
         private void Awake()
         {
             this.transform = base.transform;
+            this.gameObject.SetActive(false);
         }
 
         #endregion
@@ -47,16 +48,14 @@ namespace UniT.Pooling
         {
             while (this.pooledObjects.Count < count)
             {
-                var instance = this.Instantiate();
-                instance.SetActive(false);
-                this.pooledObjects.Enqueue(instance);
+                this.pooledObjects.Enqueue(this.Instantiate());
             }
         }
 
-        public GameObject Spawn(Vector3 position = default, Quaternion rotation = default, Transform? parent = null, bool spawnInWorldSpace = true)
+        public GameObject Spawn(Vector3? position = null, Quaternion? rotation = null, Transform? parent = null, bool spawnInWorldSpace = true)
         {
             var instance = this.pooledObjects.DequeueOrDefault(this.Instantiate);
-            instance.transform.SetPositionAndRotation(position, rotation);
+            instance.transform.SetPositionAndRotation(position ?? Vector3.zero, rotation ?? Quaternion.identity);
             instance.transform.SetParent(parent, spawnInWorldSpace);
             instance.SetActive(true);
             this.spawnedObjects.Add(instance);
@@ -64,7 +63,7 @@ namespace UniT.Pooling
             return instance;
         }
 
-        public T Spawn<T>(Vector3 position = default, Quaternion rotation = default, Transform? parent = null, bool spawnInWorldSpace = true)
+        public T Spawn<T>(Vector3? position = null, Quaternion? rotation = null, Transform? parent = null, bool spawnInWorldSpace = true)
         {
             return this.Spawn(position, rotation, parent, spawnInWorldSpace).GetComponentOrThrow<T>();
         }
@@ -72,8 +71,7 @@ namespace UniT.Pooling
         public void Recycle(GameObject instance)
         {
             if (!this.spawnedObjects.Remove(instance)) throw new InvalidOperationException($"{instance.name} was not spawned from {this.name}");
-            instance.SetActive(false);
-            instance.transform.SetParent(this.transform);
+            instance.transform.parent = this.transform;
             this.pooledObjects.Enqueue(instance);
             this.Recycled?.Invoke(instance);
         }

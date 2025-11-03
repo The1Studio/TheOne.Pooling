@@ -75,9 +75,9 @@ namespace UniT.Pooling
         }
         #endif
 
-        GameObject IObjectPoolManager.Spawn(GameObject prefab, Vector3 position, Quaternion rotation, Transform? parent, bool spawnInWorldSpace) => this.Spawn(prefab, position, rotation, parent, spawnInWorldSpace);
+        GameObject IObjectPoolManager.Spawn(GameObject prefab, Vector3? position, Quaternion? rotation, Transform? parent, bool spawnInWorldSpace) => this.Spawn(prefab, position, rotation, parent, spawnInWorldSpace);
 
-        GameObject IObjectPoolManager.Spawn(string key, Vector3 position, Quaternion rotation, Transform? parent, bool spawnInWorldSpace)
+        GameObject IObjectPoolManager.Spawn(string key, Vector3? position, Quaternion? rotation, Transform? parent, bool spawnInWorldSpace)
         {
             var prefab = this.keyToPrefab.GetOrAdd(key, () => this.assetsManager.Load<GameObject>(key));
             return this.Spawn(prefab, position, rotation, parent, spawnInWorldSpace);
@@ -139,7 +139,7 @@ namespace UniT.Pooling
             }).Load(count);
         }
 
-        private GameObject Spawn(GameObject prefab, Vector3 position, Quaternion rotation, Transform? parent, bool spawnInWorldSpace)
+        private GameObject Spawn(GameObject prefab, Vector3? position, Quaternion? rotation, Transform? parent, bool spawnInWorldSpace)
         {
             if (!this.prefabToPool.ContainsKey(prefab))
             {
