@@ -47,9 +47,9 @@ namespace UniT.Pooling
 
         public void Load(Component prefab, int count = 1) => this.Load(prefab.gameObject, count);
 
-        public T Spawn<T>(T prefab, Vector3 position = default, Quaternion rotation = default, Transform? parent = null, bool spawnInWorldSpace = true) where T : Component => this.Spawn(prefab.gameObject, position, rotation, parent, spawnInWorldSpace).GetComponent<T>();
+        public T Spawn<T>(T prefab, Vector3? position = null, Quaternion? rotation = null, Transform? parent = null, bool spawnInWorldSpace = true) where T : Component => this.Spawn(prefab.gameObject, position, rotation, parent, spawnInWorldSpace).GetComponent<T>();
 
-        public T Spawn<T>(string key, Vector3 position = default, Quaternion rotation = default, Transform? parent = null, bool spawnInWorldSpace = true) => this.Spawn(key, position, rotation, parent, spawnInWorldSpace).GetComponentOrThrow<T>();
+        public T Spawn<T>(string key, Vector3? position = null, Quaternion? rotation = null, Transform? parent = null, bool spawnInWorldSpace = true) => this.Spawn(key, position, rotation, parent, spawnInWorldSpace).GetComponentOrThrow<T>();
 
         public void Recycle(Component instance) => this.Recycle(instance.gameObject);
 
@@ -65,7 +65,7 @@ namespace UniT.Pooling
 
         public void Load<T>(int count = 1) => this.Load(typeof(T).GetKey(), count);
 
-        public T Spawn<T>(Vector3 position = default, Quaternion rotation = default, Transform? parent = null) => this.Spawn<T>(typeof(T).GetKey(), position, rotation, parent);
+        public T Spawn<T>(Vector3? position = null, Quaternion? rotation = null, Transform? parent = null) => this.Spawn<T>(typeof(T).GetKey(), position, rotation, parent);
 
         public void RecycleAll<T>() => this.RecycleAll(typeof(T).GetKey());
 
