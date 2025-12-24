@@ -23,25 +23,25 @@ namespace UniT.Pooling
 
         public void Load(GameObject prefab, int count = 1);
 
-        public void Load(string key, int count = 1);
+        public void Load(object key, int count = 1);
 
         public GameObject Spawn(GameObject prefab, Vector3? position = null, Quaternion? rotation = null, Transform? parent = null, bool spawnInWorldSpace = true);
 
-        public GameObject Spawn(string key, Vector3? position = null, Quaternion? rotation = null, Transform? parent = null, bool spawnInWorldSpace = true);
+        public GameObject Spawn(object key, Vector3? position = null, Quaternion? rotation = null, Transform? parent = null, bool spawnInWorldSpace = true);
 
         public void Recycle(GameObject instance);
 
         public void RecycleAll(GameObject prefab);
 
-        public void RecycleAll(string key);
+        public void RecycleAll(object key);
 
         public void Cleanup(GameObject prefab, int retainCount = 1);
 
-        public void Cleanup(string key, int retainCount = 1);
+        public void Cleanup(object key, int retainCount = 1);
 
         public void Unload(GameObject prefab);
 
-        public void Unload(string key);
+        public void Unload(object key);
 
         #region Component
 
@@ -49,7 +49,7 @@ namespace UniT.Pooling
 
         public T Spawn<T>(T prefab, Vector3? position = null, Quaternion? rotation = null, Transform? parent = null, bool spawnInWorldSpace = true) where T : Component => this.Spawn(prefab.gameObject, position, rotation, parent, spawnInWorldSpace).GetComponent<T>();
 
-        public T Spawn<T>(string key, Vector3? position = null, Quaternion? rotation = null, Transform? parent = null, bool spawnInWorldSpace = true) => this.Spawn(key, position, rotation, parent, spawnInWorldSpace).GetComponentOrThrow<T>();
+        public T Spawn<T>(object key, Vector3? position = null, Quaternion? rotation = null, Transform? parent = null, bool spawnInWorldSpace = true) => this.Spawn(key, position, rotation, parent, spawnInWorldSpace).GetComponentOrThrow<T>();
 
         public void Recycle(Component instance) => this.Recycle(instance.gameObject);
 
@@ -78,11 +78,11 @@ namespace UniT.Pooling
         #region Async
 
         #if UNIT_UNITASK
-        public UniTask LoadAsync(string key, int count = 1, IProgress<float>? progress = null, CancellationToken cancellationToken = default);
+        public UniTask LoadAsync(object key, int count = 1, IProgress<float>? progress = null, CancellationToken cancellationToken = default);
 
         public UniTask LoadAsync<T>(int count = 1, IProgress<float>? progress = null, CancellationToken cancellationToken = default) => this.LoadAsync(typeof(T).GetKey(), count, progress, cancellationToken);
         #else
-        public IEnumerator LoadAsync(string key, int count = 1, Action? callback = null, IProgress<float>? progress = null);
+        public IEnumerator LoadAsync(object key, int count = 1, Action? callback = null, IProgress<float>? progress = null);
 
         public IEnumerator LoadAsync<T>(int count = 1, Action? callback = null, IProgress<float>? progress = null) => this.LoadAsync(typeof(T).GetKey(), count, callback, progress);
         #endif

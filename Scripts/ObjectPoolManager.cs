@@ -26,7 +26,7 @@ namespace UniT.Pooling
         private readonly ILogger        logger;
 
         private readonly Transform                          poolsContainer = new GameObject(nameof(ObjectPoolManager)).DontDestroyOnLoad().transform;
-        private readonly Dictionary<string, GameObject>     keyToPrefab    = new Dictionary<string, GameObject>();
+        private readonly Dictionary<object, GameObject>     keyToPrefab    = new Dictionary<object, GameObject>();
         private readonly Dictionary<GameObject, ObjectPool> prefabToPool   = new Dictionary<GameObject, ObjectPool>();
         private readonly Dictionary<GameObject, ObjectPool> instanceToPool = new Dictionary<GameObject, ObjectPool>();
 
@@ -49,20 +49,20 @@ namespace UniT.Pooling
 
         void IObjectPoolManager.Load(GameObject prefab, int count) => this.Load(prefab, count);
 
-        void IObjectPoolManager.Load(string key, int count)
+        void IObjectPoolManager.Load(object key, int count)
         {
             var prefab = this.keyToPrefab.GetOrAdd(key, () => this.assetsManager.Load<GameObject>(key));
             this.Load(prefab, count);
         }
 
         #if UNIT_UNITASK
-        async UniTask IObjectPoolManager.LoadAsync(string key, int count, IProgress<float>? progress, CancellationToken cancellationToken)
+        async UniTask IObjectPoolManager.LoadAsync(object key, int count, IProgress<float>? progress, CancellationToken cancellationToken)
         {
             var prefab = await this.keyToPrefab.GetOrAddAsync(key, () => this.assetsManager.LoadAsync<GameObject>(key, progress, cancellationToken));
             this.Load(prefab, count);
         }
         #else
-        IEnumerator IObjectPoolManager.LoadAsync(string key, int count, Action? callback, IProgress<float>? progress)
+        IEnumerator IObjectPoolManager.LoadAsync(object key, int count, Action? callback, IProgress<float>? progress)
         {
             var prefab = default(GameObject)!;
             yield return this.keyToPrefab.GetOrAddAsync(
@@ -77,7 +77,7 @@ namespace UniT.Pooling
 
         GameObject IObjectPoolManager.Spawn(GameObject prefab, Vector3? position, Quaternion? rotation, Transform? parent, bool spawnInWorldSpace) => this.Spawn(prefab, position, rotation, parent, spawnInWorldSpace);
 
-        GameObject IObjectPoolManager.Spawn(string key, Vector3? position, Quaternion? rotation, Transform? parent, bool spawnInWorldSpace)
+        GameObject IObjectPoolManager.Spawn(object key, Vector3? position, Quaternion? rotation, Transform? parent, bool spawnInWorldSpace)
         {
             var prefab = this.keyToPrefab.GetOrAdd(key, () => this.assetsManager.Load<GameObject>(key));
             return this.Spawn(prefab, position, rotation, parent, spawnInWorldSpace);
@@ -92,7 +92,7 @@ namespace UniT.Pooling
 
         void IObjectPoolManager.RecycleAll(GameObject prefab) => this.RecycleAll(prefab);
 
-        void IObjectPoolManager.RecycleAll(string key)
+        void IObjectPoolManager.RecycleAll(object key)
         {
             if (!this.TryGetPrefab(key, out var prefab)) return;
             this.RecycleAll(prefab);
@@ -100,7 +100,7 @@ namespace UniT.Pooling
 
         void IObjectPoolManager.Cleanup(GameObject prefab, int retainCount) => this.Cleanup(prefab, retainCount);
 
-        void IObjectPoolManager.Cleanup(string key, int retainCount)
+        void IObjectPoolManager.Cleanup(object key, int retainCount)
         {
             if (!this.TryGetPrefab(key, out var prefab)) return;
             this.Cleanup(prefab, retainCount);
@@ -108,7 +108,7 @@ namespace UniT.Pooling
 
         void IObjectPoolManager.Unload(GameObject prefab) => this.Unload(prefab);
 
-        void IObjectPoolManager.Unload(string key)
+        void IObjectPoolManager.Unload(object key)
         {
             if (!this.TryGetPrefab(key, out var prefab)) return;
             this.Unload(prefab);
@@ -188,7 +188,7 @@ namespace UniT.Pooling
             return false;
         }
 
-        private bool TryGetPrefab(string key, [MaybeNullWhen(false)] out GameObject prefab)
+        private bool TryGetPrefab(object key, [MaybeNullWhen(false)] out GameObject prefab)
         {
             if (this.keyToPrefab.TryGetValue(key, out prefab)) return true;
             this.logger.Warning($"{key} pool not loaded");
